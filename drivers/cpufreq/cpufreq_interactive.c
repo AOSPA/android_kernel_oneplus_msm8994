@@ -64,6 +64,7 @@ struct cpufreq_interactive_cpuinfo {
 	u64 cputime_speedadj;
 	u64 cputime_speedadj_timestamp;
 	unsigned int loadadjfreq;
+	unsigned int target_freq;
 };
 
 static DEFINE_PER_CPU(struct cpufreq_interactive_policyinfo *, polinfo);
