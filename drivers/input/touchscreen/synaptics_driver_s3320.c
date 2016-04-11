@@ -1112,23 +1112,12 @@ static void synaptics_get_coordinate_point(struct synaptics_ts_data *ts)
 
 static void gesture_judge(struct synaptics_ts_data *ts, unsigned char *gestureext)
 {
-	int i;
 	int ret = 0,gesture_sign, regswipe;
 	uint8_t gesture_buffer[10];
 	unsigned char code = KEY_GESTURE_UNKNOWN;
 	unsigned char reportbuf[3];
-	unsigned short points[16];
 
 	F12_2D_DATA04 = 0x0007;
-
-	for (i = 0 ; i < 2*6; i++) {
-		points[i] = ((unsigned short)gestureext[i*2]) | (((unsigned short)gestureext[i*2+1])<<8) ;
-	}
-
-	points[i] =
-		(gestureext[24] == 0x10) ? 1 :
-		(gestureext[24] == 0x20) ? 0 :
-		2 ;// 1--clockwise, 0--anticlockwise, not circle, report 2
 
 	TPD_DEBUG("%s is called!\n",__func__);
 	ret = synaptics_rmi4_i2c_write_byte(ts->client, 0xff, 0x00);
@@ -1152,41 +1141,26 @@ static void gesture_judge(struct synaptics_ts_data *ts, unsigned char *gestureex
 			}
 			break;
 		case SWIPE_DETECT:
-			gesture =
-					(gestureext[24] == 0x41) ? Left2RightSwip   :
-					(gestureext[24] == 0x42) ? Right2LeftSwip   :
-					(gestureext[24] == 0x44) ? Up2DownSwip	  :
-					(gestureext[24] == 0x48) ? Down2UpSwip	  :
-					(gestureext[24] == 0x80) ? DouSwip		  :
-					UnkownGesture;
-			if (gesture == DouSwip || gesture == Down2UpSwip ||
-					gesture == Up2DownSwip) {
-				if (abs(points[3] - points[1]) <= 800) {
-					gesture = UnkownGesture;
-					code = (unsigned char) KEY_GESTURE_UNKNOWN;
-				} else {
-					if (gesture == DouSwip) {
-						if (DouSwip_gesture) {
-							code = (unsigned char) KEY_GESTURE_TWO_SWIPE;
-						}
-					} else if (gesture == Down2UpSwip) {
-						if (Down2UpSwip_gesture) {
-							code = (unsigned char) KEY_GESTURE_DTU_ONE_SWIPE;
-						}
-					} else if (gesture == Up2DownSwip) {
-						if (Up2DownSwip_gesture) {
-							code = (unsigned char) KEY_GESTURE_UTD_ONE_SWIPE;
-						}
-					}
-				}
-			} else if (gesture == Left2RightSwip) {
-				if (Left2RightSwip_gesture) {
-					code = (unsigned char) KEY_GESTURE_LTR_ONE_SWIPE;
-				}
-			} else if (gesture == Right2LeftSwip) {
-				if (Right2LeftSwip_gesture) {
-					code = (unsigned char) KEY_GESTURE_RTL_ONE_SWIPE;
-				}
+			gesture = (regswipe == 0x41) ? Left2RightSwip   :
+				(regswipe == 0x42) ? Right2LeftSwip   :
+				(regswipe == 0x44) ? Up2DownSwip      :
+				(regswipe == 0x48) ? Down2UpSwip      :
+				(regswipe == 0x80) ? DouSwip          :
+				UnkownGesture;
+			if (Left2RightSwip_gesture) {
+				code = (unsigned char) KEY_GESTURE_LTR_ONE_SWIPE;
+			}
+			if (Right2LeftSwip_gesture) {
+				code = (unsigned char) KEY_GESTURE_RTL_ONE_SWIPE;
+			}
+			if (Up2DownSwip_gesture) {
+				code = (unsigned char) KEY_GESTURE_UTD_ONE_SWIPE;
+			}
+			if (Down2UpSwip_gesture) {
+				code = (unsigned char) KEY_GESTURE_DTU_ONE_SWIPE;
+			}
+			if (DouSwip_gesture) {
+				code = (unsigned char) KEY_GESTURE_TWO_SWIPE;
 			}
 			break;
 		case CIRCLE_DETECT:
@@ -1196,51 +1170,33 @@ static void gesture_judge(struct synaptics_ts_data *ts, unsigned char *gestureex
 			}
 			break;
 		case VEE_DETECT:
-			switch(gesture){
-				case 0x01:  //UP
-					gesture = DownVee;
-					if (DownVee_gesture) {
-						code = (unsigned char) KEY_GESTURE_V_REVERSE;
-					}
-					break;
-				case 0x02:  //DOWN
-					gesture = UpVee;
-					if (UpVee_gesture) {
-						code = (unsigned char) KEY_GESTURE_V;
-					}
-					break;
-				case 0x04:  //LEFT
-					gesture = RightVee;
-					if (RightVee_gesture) {
-						code = (unsigned char) KEY_GESTURE_RIGHT_V;
-					}
-					break;
-				case 0x08:  //RIGHT
-					gesture = LeftVee;
-					if (LeftVee_gesture) {
-						code = (unsigned char) KEY_GESTURE_LEFT_V;
-					}
-					break;
-			}
-			break;
-/*			gesture = (gesture_buffer[2] == 0x01) ? DownVee  :
+			gesture = (gesture_buffer[2] == 0x01) ? DownVee  :
 				(gesture_buffer[2] == 0x02) ? UpVee    :
 				(gesture_buffer[2] == 0x04) ? RightVee :
 				(gesture_buffer[2] == 0x08) ? LeftVee  :
 				UnkownGesture;
-			break;*/
+			if (UpVee_gesture) {
+				code = (unsigned char) KEY_GESTURE_V;
+			}
+			if (DownVee_gesture) {
+				code = (unsigned char) KEY_GESTURE_V_REVERSE;
+			}
+			if (LeftVee_gesture) {
+				code = (unsigned char) KEY_GESTURE_LEFT_V;
+			}
+			if (RightVee_gesture) {
+				code = (unsigned char) KEY_GESTURE_RIGHT_V;
+			}
+			break;
 		case UNICODE_DETECT:
 			gesture = (gesture_buffer[2] == 0x77) ? Wgesture :
 				(gesture_buffer[2] == 0x6d) ? Mgesture :
 				UnkownGesture;
-			if (gesture == Wgesture) {
-				if (Wgesture_gesture) {
-					code = (unsigned char) KEY_GESTURE_W;
-				}
-			} else if (gesture == Mgesture) {
-				if (Mgesture_gesture) {
-					code = (unsigned char) KEY_GESTURE_M;
-				}
+			if (Wgesture_gesture) {
+				code = (unsigned char) KEY_GESTURE_W;
+			}
+			if (Mgesture_gesture) {
+				code = (unsigned char) KEY_GESTURE_M;
 			}
 			break;
 		case 0:
@@ -2477,8 +2433,9 @@ static int	synaptics_input_init(struct synaptics_ts_data *ts)
 		TPD_ERR("synaptics_ts_probe: Failed to allocate input device\n");
 		return ret;
 	}
-    ts->input_dev->name = SYNAPTICS_NAME;
-    ts->input_dev->dev.parent = &ts->client->dev;
+
+	ts->input_dev->name = SYNAPTICS_NAME;
+	ts->input_dev->dev.parent = &ts->client->dev;
 	set_bit(EV_SYN, ts->input_dev->evbit);
 	set_bit(EV_ABS, ts->input_dev->evbit);
 	set_bit(EV_KEY, ts->input_dev->evbit);
