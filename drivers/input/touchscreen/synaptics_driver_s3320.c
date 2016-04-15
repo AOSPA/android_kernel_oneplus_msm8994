@@ -1594,104 +1594,7 @@ static ssize_t double_tap_enable_write_func(struct file *file, const char __user
 	{
 		ts->double_enable = 1;
 		syna_use_gesture = 1;
-	}
-	else
-	{
-        	ts->double_enable = 0;
-		syna_use_gesture = 0;
-	}
-	return count;
-}
-
-static ssize_t camera_enable_read_func(struct file *file, char __user *user_buf, size_t count, loff_t *ppos)
-{
-	int ret = 0;
-	char page[PAGESIZE];
-	ret = sprintf(page, "%d\n", Circle_gesture);
-	ret = simple_read_from_buffer(user_buf, count, ppos, page, strlen(page));
-	return ret;
-}
-
-static ssize_t camera_enable_write_func(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
-{
-	int ret = 0;
-	struct synaptics_ts_data *ts = ts_g;
-
-	sscanf(buf, "%d", &ret);
-
-	Circle_gesture = ret;
-	if (DouTap_gesture || Circle_gesture || UpVee_gesture ||
-                (LeftVee_gesture && RightVee_gesture && DouSwip_gesture))
-	{
-		ts->double_enable = 1;
-		syna_use_gesture = 1;
-	}
-	else
-	{
-        	ts->double_enable = 0;
-		syna_use_gesture = 0;
-	}
-	return count;
-}
-
-static ssize_t music_enable_read_func(struct file *file, char __user *user_buf, size_t count, loff_t *ppos)
-{
-	int ret = 0;
-	char page[PAGESIZE];
-	ret = sprintf(page, "%d\n", LeftVee_gesture && RightVee_gesture && DouSwip_gesture);
-	ret = simple_read_from_buffer(user_buf, count, ppos, page, strlen(page));
-	return ret;
-}
-
-static ssize_t music_enable_write_func(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
-{
-	int ret = 0;
-	struct synaptics_ts_data *ts = ts_g;
-
-	sscanf(buf, "%d", &ret);
-
-	DouSwip_gesture = ret;
-	LeftVee_gesture = ret;
-	RightVee_gesture = ret;
-	if (DouTap_gesture || Circle_gesture || UpVee_gesture ||
-                (LeftVee_gesture && RightVee_gesture && DouSwip_gesture))
-	{
-		ts->double_enable = 1;
-		syna_use_gesture = 1;
-	}
-	else
-	{
-        	ts->double_enable = 0;
-		syna_use_gesture = 0;
-	}
-	return count;
-}
-
-static ssize_t flashlight_enable_read_func(struct file *file, char __user *user_buf, size_t count, loff_t *ppos)
-{
-	int ret = 0;
-	char page[PAGESIZE];
-	ret = sprintf(page, "%d\n", UpVee_gesture);
-	ret = simple_read_from_buffer(user_buf, count, ppos, page, strlen(page));
-	return ret;
-}
-
-static ssize_t flashlight_enable_write_func(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
-{
-	int ret = 0;
-	struct synaptics_ts_data *ts = ts_g;
-
-	sscanf(buf, "%d", &ret);
-
-	UpVee_gesture = ret;
-	if (DouTap_gesture || Circle_gesture || UpVee_gesture ||
-                (LeftVee_gesture && RightVee_gesture && DouSwip_gesture))
-	{
-		ts->double_enable = 1;
-		syna_use_gesture = 1;
-	}
-	else
-	{
+	} else {
         	ts->double_enable = 0;
 		syna_use_gesture = 0;
 	}
@@ -1716,27 +1619,6 @@ static const struct file_operations coordinate_proc_fops = {
 static const struct file_operations double_tap_enable_proc_fops = {
 	.write = double_tap_enable_write_func,
 	.read =  double_tap_enable_read_func,
-	.open = simple_open,
-	.owner = THIS_MODULE,
-};
-
-static const struct file_operations camera_enable_proc_fops = {
-	.write = camera_enable_write_func,
-	.read =  camera_enable_read_func,
-	.open = simple_open,
-	.owner = THIS_MODULE,
-};
-
-static const struct file_operations music_enable_proc_fops = {
-	.write = music_enable_write_func,
-	.read =  music_enable_read_func,
-	.open = simple_open,
-	.owner = THIS_MODULE,
-};
-
-static const struct file_operations flashlight_enable_proc_fops = {
-	.write = flashlight_enable_write_func,
-	.read =  flashlight_enable_read_func,
 	.open = simple_open,
 	.owner = THIS_MODULE,
 };
@@ -2798,37 +2680,19 @@ static int init_synaptics_proc(void)
 
 #ifdef SUPPORT_GESTURE
 	prEntry_tmp = proc_create( "gesture_enable", 0666, prEntry_tp, &tp_gesture_proc_fops);
-	if(prEntry_tmp == NULL){
+	if (prEntry_tmp == NULL) {
 		ret = -ENOMEM;
 		printk(KERN_INFO"init_synaptics_proc: Couldn't create proc entry\n");
 	}
 
 	prEntry_tmp = proc_create("coordinate", 0444, prEntry_tp, &coordinate_proc_fops);
-	if(prEntry_tmp == NULL){
+	if (prEntry_tmp == NULL) {
 		ret = -ENOMEM;
 		printk(KERN_INFO"init_synaptics_proc: Couldn't create proc entry\n");
 	}
 
 	prEntry_tmp = proc_create("double_tap_enable", 0666, prEntry_tp, &double_tap_enable_proc_fops);
-	if(prEntry_tmp == NULL){
-		ret = -ENOMEM;
-		printk(KERN_INFO"init_synaptics_proc: Couldn't create proc entry\n");
-	}
-
-	prEntry_tmp = proc_create("camera_enable", 0666, prEntry_tp, &camera_enable_proc_fops);
-	if(prEntry_tmp == NULL){
-		ret = -ENOMEM;
-		printk(KERN_INFO"init_synaptics_proc: Couldn't create proc entry\n");
-	}
-
-	prEntry_tmp = proc_create("music_enable", 0666, prEntry_tp, &music_enable_proc_fops);
-	if(prEntry_tmp == NULL){
-		ret = -ENOMEM;
-		printk(KERN_INFO"init_synaptics_proc: Couldn't create proc entry\n");
-	}
-
-	prEntry_tmp = proc_create("flashlight_enable", 0666, prEntry_tp, &flashlight_enable_proc_fops);
-	if(prEntry_tmp == NULL){
+	if (prEntry_tmp == NULL) {
 		ret = -ENOMEM;
 		printk(KERN_INFO"init_synaptics_proc: Couldn't create proc entry\n");
 	}
