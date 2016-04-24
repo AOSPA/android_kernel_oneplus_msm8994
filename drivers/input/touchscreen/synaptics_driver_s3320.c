@@ -146,7 +146,7 @@ struct test_header {
 #define KEY_GESTURE_DTU_ONE_SWIPE     68  // F10
 #define KEY_GESTURE_W                 87  // F11
 #define KEY_GESTURE_M                 88  // F12
-#define KEY_GESTURE_DOUBLE_TAP        KEY_WAKEUP // F13
+#define KEY_GESTURE_DOUBLE_TAP        89 // F13
 
 #define BIT0 (0x1 << 0)
 
@@ -1147,20 +1147,30 @@ static void gesture_judge(struct synaptics_ts_data *ts, unsigned char *gestureex
 				(regswipe == 0x48) ? Down2UpSwip      :
 				(regswipe == 0x80) ? DouSwip          :
 				UnkownGesture;
-			if (Left2RightSwip_gesture) {
-				code = (unsigned char) KEY_GESTURE_LTR_ONE_SWIPE;
-			}
-			if (Right2LeftSwip_gesture) {
-				code = (unsigned char) KEY_GESTURE_RTL_ONE_SWIPE;
-			}
-			if (Up2DownSwip_gesture) {
-				code = (unsigned char) KEY_GESTURE_UTD_ONE_SWIPE;
-			}
-			if (Down2UpSwip_gesture) {
-				code = (unsigned char) KEY_GESTURE_DTU_ONE_SWIPE;
-			}
-			if (DouSwip_gesture) {
-				code = (unsigned char) KEY_GESTURE_TWO_SWIPE;
+			if (gesture == DouSwip || gesture == Down2UpSwip ||
+				gesture == Up2DownSwip) {
+
+				if (gesture == DouSwip) {
+					if (DouSwip_gesture) {
+						code = (unsigned char) KEY_GESTURE_TWO_SWIPE;
+					}
+				} else if (gesture == Down2UpSwip) {
+					if (Down2UpSwip_gesture) {
+						code = (unsigned char) KEY_GESTURE_DTU_ONE_SWIPE;
+					}
+				} else if (gesture == Up2DownSwip) {
+					if (Up2DownSwip_gesture) {
+						code = (unsigned char) KEY_GESTURE_UTD_ONE_SWIPE;
+					}
+				}
+			} else if (gesture == Left2RightSwip) {
+				if (Left2RightSwip_gesture) {
+					code = (unsigned char) KEY_GESTURE_LTR_ONE_SWIPE;
+				}
+			} else if (gesture == Right2LeftSwip) {
+				if (Right2LeftSwip_gesture) {
+					code = (unsigned char) KEY_GESTURE_RTL_ONE_SWIPE;
+				}
 			}
 			break;
 		case CIRCLE_DETECT:
@@ -1170,33 +1180,45 @@ static void gesture_judge(struct synaptics_ts_data *ts, unsigned char *gestureex
 			}
 			break;
 		case VEE_DETECT:
-			gesture = (gesture_buffer[2] == 0x01) ? DownVee  :
-				(gesture_buffer[2] == 0x02) ? UpVee    :
-				(gesture_buffer[2] == 0x04) ? RightVee :
-				(gesture_buffer[2] == 0x08) ? LeftVee  :
-				UnkownGesture;
-			if (UpVee_gesture) {
-				code = (unsigned char) KEY_GESTURE_V;
-			}
-			if (DownVee_gesture) {
-				code = (unsigned char) KEY_GESTURE_V_REVERSE;
-			}
-			if (LeftVee_gesture) {
-				code = (unsigned char) KEY_GESTURE_LEFT_V;
-			}
-			if (RightVee_gesture) {
-				code = (unsigned char) KEY_GESTURE_RIGHT_V;
+			switch (gesture_buffer[2]) {
+				case 0x01:
+					gesture = DownVee;
+					if (DownVee_gesture) {
+						code = (unsigned char) KEY_GESTURE_V_REVERSE;
+					}
+					break;
+				case 0x02:
+					gesture = UpVee;
+					if (UpVee_gesture) {
+						code = (unsigned char) KEY_GESTURE_V;
+					}
+					break;
+				case 0x04:
+					gesture = RightVee;
+					if (RightVee_gesture) {
+						code = (unsigned char) KEY_GESTURE_RIGHT_V;
+					}
+					break;
+				case 0x08:
+					gesture = LeftVee;
+					if (LeftVee_gesture) {
+						code = (unsigned char) KEY_GESTURE_LEFT_V;
+					}
+					break;
 			}
 			break;
 		case UNICODE_DETECT:
 			gesture = (gesture_buffer[2] == 0x77) ? Wgesture :
 				(gesture_buffer[2] == 0x6d) ? Mgesture :
 				UnkownGesture;
-			if (Wgesture_gesture) {
-				code = (unsigned char) KEY_GESTURE_W;
-			}
-			if (Mgesture_gesture) {
-				code = (unsigned char) KEY_GESTURE_M;
+			if (gesture == Wgesture) {
+				if (Wgesture_gesture) {
+					code = (unsigned char) KEY_GESTURE_W;
+				}
+			} else if (gesture == Mgesture) {
+				if (Mgesture_gesture) {
+					code = (unsigned char) KEY_GESTURE_M;
+				}
 			}
 			break;
 		case 0:
@@ -1328,7 +1350,7 @@ void int_touch(void)
 		        key_back_check = true;
                         points.status = 1;
                         finger_status =  points.status & 0x03;
-                    }else if(key_home_pressed && !key_home_check){
+                    } else if (key_home_pressed && !key_home_check) {
                         points.x = 0x21c;
                         points.y = 0x7e2;
                         points.z = 0x33;
@@ -1336,14 +1358,13 @@ void int_touch(void)
                         points.raw_y = 6;
 		        key_home_check = true;
                         points.status = 1;
-                        finger_status =  points.status & 0x03;               
-	            }else{
+                        finger_status =  points.status & 0x03;
+	            } else {
                         //TPD_DEBUG(" finger %d with !finger_statue and no key match\n",i);
                     }
                 }
 		}
 #endif
-
 		if (finger_status) {
 			input_mt_slot(ts->input_dev, i);
 			input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, finger_status);
@@ -2329,6 +2350,7 @@ static int	synaptics_input_init(struct synaptics_ts_data *ts)
 
 	set_bit(KEY_GESTURE_CIRCLE, ts->input_dev->keybit);
 	set_bit(KEY_GESTURE_V, ts->input_dev->keybit);
+        set_bit(KEY_GESTURE_TWO_SWIPE, ts->input_dev->keybit);
 	set_bit(KEY_GESTURE_LEFT_V, ts->input_dev->keybit);
 	set_bit(KEY_GESTURE_RIGHT_V, ts->input_dev->keybit);
 	set_bit(KEY_GESTURE_LTR_ONE_SWIPE, ts->input_dev->keybit);
