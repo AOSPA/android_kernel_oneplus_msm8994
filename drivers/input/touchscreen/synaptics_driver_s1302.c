@@ -667,12 +667,21 @@ static int synaptics_rmi4_i2c_write_word(struct i2c_client* client,
 */
 static char log_count = 0;
 #ifdef VENDOR_EDIT //WayneChang, 2015/11/13, Change MENU key to APPSELECT key
-#define REP_KEY_APPSELECT (key_reverse?(KEY_BACK):(KEY_APPSELECT))
-#define REP_KEY_BACK (key_reverse?(KEY_APPSELECT):(KEY_BACK))
+// carlosavignano@aospa.co, we need to reverse the reverse to match global standards
+// and Android design since back is on the right by default within this tp.
+// Original:
+// #define REP_KEY_APPSELECT (key_reverse?(KEY_BACK):(KEY_APPSELECT))
+// #define REP_KEY_BACK (key_reverse?(KEY_APPSELECT):(KEY_BACK))
+#define REP_KEY_BACK (key_reverse?(KEY_BACK):(KEY_APPSELECT))
+#define REP_KEY_APPSELECT (key_reverse?(KEY_APPSELECT):(KEY_BACK))
 #else
 #define REP_KEY_MENU (key_reverse?(KEY_BACK):(KEY_MENU))
 #define REP_KEY_BACK (key_reverse?(KEY_MENU):(KEY_BACK))
 #endif
+// carlosavignano@aospa.co, we need to reverse the reverse to match global standards
+// and Android design since back is on the right by default within this tp.
+#define REP_KEY_BACK (key_reverse?(KEY_BACK):(KEY_APPSELECT))
+#define REP_KEY_APPSELECT (key_reverse?(KEY_APPSELECT):(KEY_BACK))
 
 #ifdef VENDOR_EDIT //WayneChang, 2015/12/02, add for key to abs, simulate key in abs through virtual key system
 struct completion key_cm;
