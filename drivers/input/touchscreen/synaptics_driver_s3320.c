@@ -133,20 +133,20 @@ struct test_header {
 #define Wgesture            13  // W
 
 // carlosavignano@aospa.co, gesture codes.
-#define KEY_GESTURE_UNKNOWN           0
-#define KEY_GESTURE_CIRCLE            59  // F1
-#define KEY_GESTURE_TWO_SWIPE         60  // F2
-#define KEY_GESTURE_V                 61  // F3
-#define KEY_GESTURE_V_REVERSE         62  // F4
-#define KEY_GESTURE_LEFT_V            63  // F5
-#define KEY_GESTURE_RIGHT_V           64  // F6
-#define KEY_GESTURE_LTR_ONE_SWIPE     65  // F7
-#define KEY_GESTURE_RTL_ONE_SWIPE     66  // F8
-#define KEY_GESTURE_UTD_ONE_SWIPE     67  // F9
-#define KEY_GESTURE_DTU_ONE_SWIPE     68  // F10
-#define KEY_GESTURE_W                 87  // F11
-#define KEY_GESTURE_M                 88  // F12
-#define KEY_GESTURE_DOUBLE_TAP        89 // F13
+#define KEY_GESTURE_UNKNOWN           0   // KEY_RESERVED
+#define KEY_GESTURE_CIRCLE            59  // KEY_F1
+#define KEY_GESTURE_TWO_SWIPE         60  // KEY_F2
+#define KEY_GESTURE_V                 61  // KEY_F3
+#define KEY_GESTURE_V_REVERSE         62  // KEY_F4
+#define KEY_GESTURE_LEFT_V            63  // KEY_F5
+#define KEY_GESTURE_RIGHT_V           64  // KEY_F6
+#define KEY_GESTURE_LTR_ONE_SWIPE     65  // KEY_F7
+#define KEY_GESTURE_RTL_ONE_SWIPE     66  // KEY_F8
+#define KEY_GESTURE_UTD_ONE_SWIPE     67  // KEY_F9
+#define KEY_GESTURE_DTU_ONE_SWIPE     68  // KEY_F10
+#define KEY_GESTURE_W                 87  // KEY_F11
+#define KEY_GESTURE_M                 88  // KEY_F12
+#define KEY_GESTURE_DOUBLE_TAP        183 // KEY_F13
 
 #define BIT0 (0x1 << 0)
 
