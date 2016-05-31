@@ -85,6 +85,7 @@ static int force_update = 0;
 static int key_reverse = 0;
 #ifdef VENDOR_EDIT //WayneChang, 2015/12/29, add flag to enable virtual key
 bool virtual_key_enable = false;
+bool virtual_key_allowed = false;
 EXPORT_SYMBOL(virtual_key_enable);
 #endif
 static struct synaptics_ts_data *tc_g = NULL;
@@ -833,7 +834,7 @@ static void synaptics_ts_report(struct synaptics_ts_data *ts )
     }
     if( inte & 0x10) {
 #ifdef VENDOR_EDIT //WayneChang, 2015/12/29, add flag to enable virtual key
-		if(virtual_key_enable){
+		if(virtual_key_allowed && virtual_key_enable){
             int_virtual_key(ts);
         }
 		else{
