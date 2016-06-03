@@ -336,9 +336,10 @@ static void __init setup_machine_fdt(phys_addr_t dt_phys)
 	}
 
 	machine_name = of_flat_dt_get_machine_name();
-	dump_stack_set_arch_desc("%s (DT)", machine_name);
-	if (machine_name)
+	if (machine_name) {
+		dump_stack_set_arch_desc("%s (DT)", machine_name);
 		pr_info("Machine: %s\n", machine_name);
+	}
 }
 
 /*
@@ -512,7 +513,7 @@ static int c_show(struct seq_file *m, void *v)
        // not run .
        #ifdef VENDOR_EDIT
 	seq_printf(m, "Processor\t: %s rev %d (%s)\n",
-	cpu_name, read_cpuid_id() & 15, ELF_PLATFORM);
+		cpu_name, read_cpuid_id() & 15, ELF_PLATFORM);
        #endif
 
 	for_each_present_cpu(i) {
@@ -572,6 +573,11 @@ static int c_show(struct seq_file *m, void *v)
 	seq_printf(m, "Processor\t: %s rev %d (%s)\n",
 	cpu_name, read_cpuid_id() & 15, ELF_PLATFORM);
        #endif
+
+	if (!arch_read_hardware_id)
+		seq_printf(m, "Hardware\t: %s\n", machine_name);
+	else
+		seq_printf(m, "Hardware\t: %s\n", arch_read_hardware_id());
 
 	return 0;
 }
