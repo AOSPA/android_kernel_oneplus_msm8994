@@ -138,8 +138,8 @@ struct test_header {
 #define KEY_GESTURE_TWO_SWIPE         60  // KEY_F2
 #define KEY_GESTURE_V                 61  // KEY_F3
 #define KEY_GESTURE_V_REVERSE         62  // KEY_F4
-#define KEY_GESTURE_RIGHT_V           63  // KEY_F5
-#define KEY_GESTURE_LEFT_V            64  // KEY_F6
+#define KEY_GESTURE_LEFT_V            63  // KEY_F5
+#define KEY_GESTURE_RIGHT_V           64  // KEY_F6
 #define KEY_GESTURE_LTR_ONE_SWIPE     65  // KEY_F7
 #define KEY_GESTURE_RTL_ONE_SWIPE     66  // KEY_F8
 #define KEY_GESTURE_UTD_ONE_SWIPE     67  // KEY_F9
