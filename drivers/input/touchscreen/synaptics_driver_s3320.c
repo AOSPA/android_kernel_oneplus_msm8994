@@ -1110,11 +1110,11 @@ static void synaptics_get_coordinate_point(struct synaptics_ts_data *ts)
 		(coordinate_buf[24] & 0x20) ? 0 : 2; // 1--clockwise, 0--anticlockwise, not circle, report 2
 }
 
-static void gesture_judge(struct synaptics_ts_data *ts, unsigned char *gestureext)
+static void gesture_judge(struct synaptics_ts_data *ts)
 {
+	unsigned int keyCode = UnkownGesture;
 	int ret = 0,gesture_sign, regswipe;
 	uint8_t gesture_buffer[10];
-	unsigned char code = KEY_GESTURE_UNKNOWN;
 	unsigned char reportbuf[3];
 
 	F12_2D_DATA04 = 0x0007;
@@ -1134,11 +1134,7 @@ static void gesture_judge(struct synaptics_ts_data *ts, unsigned char *gestureex
 	//detect the gesture mode
 	switch (gesture_sign) {
 		case DTAP_DETECT:
-			//#ifdef VENDOR_EDIT, ruanbanmao@bsp 2015-05-06, begin.
-			gesture = DouTap;
-			if (DouTap_gesture) {
-				code = (unsigned char) KEY_GESTURE_DOUBLE_TAP;
-			}
+				gesture = DouTap;
 			break;
 		case SWIPE_DETECT:
 			gesture = (regswipe == 0x41) ? Left2RightSwip   :
@@ -1147,83 +1143,64 @@ static void gesture_judge(struct synaptics_ts_data *ts, unsigned char *gestureex
 				(regswipe == 0x48) ? Down2UpSwip      :
 				(regswipe == 0x80) ? DouSwip          :
 				UnkownGesture;
-			if (gesture == DouSwip || gesture == Down2UpSwip ||
-				gesture == Up2DownSwip) {
-
-				if (gesture == DouSwip) {
-					if (DouSwip_gesture) {
-						code = (unsigned char) KEY_GESTURE_TWO_SWIPE;
-					}
-				} else if (gesture == Down2UpSwip) {
-					if (Down2UpSwip_gesture) {
-						code = (unsigned char) KEY_GESTURE_DTU_ONE_SWIPE;
-					}
-				} else if (gesture == Up2DownSwip) {
-					if (Up2DownSwip_gesture) {
-						code = (unsigned char) KEY_GESTURE_UTD_ONE_SWIPE;
-					}
-				}
-			} else if (gesture == Left2RightSwip) {
-				if (Left2RightSwip_gesture) {
-					code = (unsigned char) KEY_GESTURE_LTR_ONE_SWIPE;
-				}
-			} else if (gesture == Right2LeftSwip) {
-				if (Right2LeftSwip_gesture) {
-					code = (unsigned char) KEY_GESTURE_RTL_ONE_SWIPE;
-				}
-			}
 			break;
 		case CIRCLE_DETECT:
-			gesture = Circle;
-			if (Circle_gesture) {
-				code = (unsigned char) KEY_GESTURE_CIRCLE;
-			}
+				gesture = Circle;
 			break;
 		case VEE_DETECT:
-			switch (gesture_buffer[2]) {
-				case 0x01:
-					gesture = DownVee;
-					if (DownVee_gesture) {
-						code = (unsigned char) KEY_GESTURE_V_REVERSE;
-					}
-					break;
-				case 0x02:
-					gesture = UpVee;
-					if (UpVee_gesture) {
-						code = (unsigned char) KEY_GESTURE_V;
-					}
-					break;
-				case 0x04:
-					gesture = RightVee;
-					if (RightVee_gesture) {
-						code = (unsigned char) KEY_GESTURE_RIGHT_V;
-					}
-					break;
-				case 0x08:
-					gesture = LeftVee;
-					if (LeftVee_gesture) {
-						code = (unsigned char) KEY_GESTURE_LEFT_V;
-					}
-					break;
-			}
+				gesture = (gesture_buffer[2] == 0x01) ? DownVee  :
+				(gesture_buffer[2] == 0x02) ? UpVee    :
+				(gesture_buffer[2] == 0x04) ? RightVee :
+				(gesture_buffer[2] == 0x08) ? LeftVee  :
+				UnkownGesture;
 			break;
 		case UNICODE_DETECT:
 			gesture = (gesture_buffer[2] == 0x77) ? Wgesture :
 				(gesture_buffer[2] == 0x6d) ? Mgesture :
 				UnkownGesture;
-			if (gesture == Wgesture) {
-				if (Wgesture_gesture) {
-					code = (unsigned char) KEY_GESTURE_W;
-				}
-			} else if (gesture == Mgesture) {
-				if (Mgesture_gesture) {
-					code = (unsigned char) KEY_GESTURE_M;
-				}
-			}
 			break;
-		case 0:
-			gesture = UnkownGesture;
-			code = (unsigned char) KEY_GESTURE_UNKNOWN;
+	}
+
+	// Get key code based on registered gesture.
+	switch (gesture) {
+		case DouTap:
+			keyCode = KEY_GESTURE_DOUBLE_TAP;
+			break;
+		case UpVee:
+			keyCode = KEY_GESTURE_V;
+			break;
+		case DownVee:
+			keyCode = KEY_GESTURE_V_REVERSE;
+			break;
+		case LeftVee:
+			keyCode = KEY_GESTURE_RIGHT_V;
+			break;
+		case RightVee:
+			keyCode = KEY_GESTURE_LEFT_V;
+			break;
+		case Circle:
+			keyCode = KEY_GESTURE_CIRCLE;
+			break;
+		case DouSwip:
+			keyCode = KEY_GESTURE_TWO_SWIPE;
+			break;
+		case Left2RightSwip:
+			keyCode = KEY_GESTURE_RTL_ONE_SWIPE;
+			break;
+		case Right2LeftSwip:
+			keyCode = KEY_GESTURE_LTR_ONE_SWIPE;
+			break;
+		case Mgesture:
+			keyCode = KEY_GESTURE_M;
+			break;
+		case Wgesture:
+			keyCode = KEY_GESTURE_W;
+			break;
+		case Up2DownSwip:
+			keyCode = KEY_GESTURE_UTD_ONE_SWIPE;
+			break;
+		case Down2UpSwip:
+			keyCode = KEY_GESTURE_DTU_ONE_SWIPE;
 			break;
 		default:
 			break;
@@ -1243,13 +1220,13 @@ static void gesture_judge(struct synaptics_ts_data *ts, unsigned char *gestureex
 			gesture == Mgesture ? "(M)" :
 			gesture == Wgesture ? "(W)" : "unknown");
 
-	if (gesture != UnkownGesture && code != KEY_GESTURE_UNKNOWN) {
+	if (gesture != UnkownGesture && keyCode != KEY_GESTURE_UNKNOWN) {
 		// Send key event with scan code == keyvalue to userspace.
 		synaptics_get_coordinate_point(ts);
 		gesture_upload = gesture;
-		input_report_key(ts->input_dev, code, 1);
+		input_report_key(ts->input_dev, keyCode, 1);
 		input_sync(ts->input_dev);
-		input_report_key(ts->input_dev, code, 0);
+		input_report_key(ts->input_dev, keyCode, 0);
 		input_sync(ts->input_dev);
 	} else {
 
@@ -1292,8 +1269,6 @@ void int_touch(void)
 	bool key_home_check = false;
 	bool key_pressed = key_appselect_pressed || key_back_pressed || key_home_pressed;
 #endif
-	unsigned char gestureext[25];
-
         if (ts_g == NULL)
             return;
         ts = ts_g;
@@ -1419,7 +1394,7 @@ void int_touch(void)
 
 #ifdef SUPPORT_GESTURE
 	if (ts->gesture_enable == 1 && ts->is_suspended == 1) {
-		gesture_judge(ts, gestureext);
+		gesture_judge(ts);
 	}
 #endif
 }
@@ -2350,7 +2325,7 @@ static int	synaptics_input_init(struct synaptics_ts_data *ts)
 
 	set_bit(KEY_GESTURE_CIRCLE, ts->input_dev->keybit);
 	set_bit(KEY_GESTURE_V, ts->input_dev->keybit);
-        set_bit(KEY_GESTURE_TWO_SWIPE, ts->input_dev->keybit);
+	set_bit(KEY_GESTURE_TWO_SWIPE, ts->input_dev->keybit);
 	set_bit(KEY_GESTURE_LEFT_V, ts->input_dev->keybit);
 	set_bit(KEY_GESTURE_RIGHT_V, ts->input_dev->keybit);
 	set_bit(KEY_GESTURE_LTR_ONE_SWIPE, ts->input_dev->keybit);
